@@ -21,6 +21,7 @@ app.get("/photo",async (req,res)=>{
                 "https://fakestoreapi.com/products",
             )
             console.log(data)
+            redis.setex("photo",DEFAULT_EXPIRATION,JSON.stringify(data))
             res.json(data)
         }
     })
