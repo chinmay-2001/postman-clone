@@ -3,6 +3,8 @@ import "bootstrap/dist/css/bootstrap.min.css"
 import axios from "axios"
 import prettyBytes from "pretty-bytes"
 import setupEditors from "./setupEditor"
+// const Redis = require('redis')
+// const redisClient = Redis.createClient();
 
 const form = document.querySelector("[data-form]")
 const queryParamsContainer = document.querySelector("[data-query-params]")
@@ -44,35 +46,51 @@ axios.interceptors.response.use(updateEndTime, e => {
   return Promise.reject(updateEndTime(e.response))
 })
 
+const DEFAULT_EXPIRTION = 3600
+
 const { requestEditor, updateResponseEditor } = setupEditors()
 form.addEventListener("submit", e => {
   e.preventDefault()
-
-  let data
-  try {
-    data = JSON.parse(requestEditor.state.doc.toString() || null)
-  } catch (e) {
-    alert("JSON data is malformed")
-    return
-  }
-
-  axios({
-    url: document.querySelector("[data-url]").value,
-    method: document.querySelector("[data-method]").value,
-    params: keyValuePairsToObjects(queryParamsContainer),
-    headers: keyValuePairsToObjects(requestHeadersContainer),
-    data,
-  })
-    .catch(e => e)
-    .then(response => {
+  redisClient.get('photos', async (error, photos) => {
+    if (error) console.error(error)
+    if (photos != null) {
       document
         .querySelector("[data-response-section]")
         .classList.remove("d-none")
-      updateResponseDetails(response)
-      updateResponseEditor(response.data)
-      updateResponseHeaders(response.headers)
-      console.log(response)
-    })
+      updateResponseDetails(JSON.parse(photos))
+      updateResponseEditor(JSON.parse(photos.data))
+      updateResponseHeaders(JSON.parse(photos.headers))
+      console.log(photos)
+    } else {
+      let data
+      try {
+        data = JSON.parse(requestEditor.state.doc.toString() || null)
+        redisClient.setex('photo', DEFAULT_EXPIRTION, JOSN.stringify(data))
+      } catch (e) {
+        alert("JSON data is malformed")
+        return
+      }
+
+      axios({
+        url: document.querySelector("[data-url]").value,
+        method: document.querySelector("[data-method]").value,
+        params: keyValuePairsToObjects(queryParamsContainer),
+        headers: keyValuePairsToObjects(requestHeadersContainer),
+        data,
+      })
+        .catch(e => e)
+        .then(response => {
+          document
+            .querySelector("[data-response-section]")
+            .classList.remove("d-none")
+          updateResponseDetails(response)
+          updateResponseEditor(response.data)
+          updateResponseHeaders(response.headers)
+          console.log(response)
+        })
+    }
+  })
+
 })
 
 function updateResponseDetails(response) {
@@ -80,7 +98,7 @@ function updateResponseDetails(response) {
   document.querySelector("[data-time]").textContent = response.customData.time
   document.querySelector("[data-size]").textContent = prettyBytes(
     JSON.stringify(response.data).length +
-      JSON.stringify(response.headers).length
+    JSON.stringify(response.headers).length
   )
 }
 
