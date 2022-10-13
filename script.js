@@ -82,6 +82,8 @@ function updateResponseDetails(response) {
     JSON.stringify(response.data).length +
       JSON.stringify(response.headers).length
   )
+  const text=document.getElementById("result");
+  text.value+="Responce time:"+response.customData.time+"ms\n"
 }
 
 function updateResponseHeaders(headers) {

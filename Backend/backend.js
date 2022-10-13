@@ -7,7 +7,7 @@ app.use(express.urlencoded({extended:true}))
 app.use(cors())
 
 const redis=require('redis')
-// const redisClient =redis.createClient()
+
 let redisClient;
 (async () => {
     redisClient=redis.createClient();
@@ -19,26 +19,7 @@ const DEFAULT_EXPIRATION=3600
 // func();
 app.get("/photo",async (req,res)=>{
     console.log("there")
-    // const {data} =await axios.get(
-    //     "https://fakestoreapi.com/products"
-    // )
-    // redisClient.SETEX("photo",DEFAULT_EXPIRATION,JSON.stringify(data))
-    // redisClient.get('photo',async (error,photo)=>{
-    //     console.log("inside redisclient")
-    //     if(error) console.error(error)
-    //     if(photo!=null){
-    //         return res.json(JSON.parse(photo));
-    //     }
-    //     else{
-    //         const {data}=await axios.get(
-    //             "https://fakestoreapi.com/products",
-    //         )
-    //         console.log(data)
-    //         redisClient.SETEX("photo",DEFAULT_EXPIRATION,JSON.stringify(data))
-    //     }
-    //     console.log("reach");
-    //     res.json(data)
-    // })
+    
     const data=await redisClient.get('photo');
     if(data!=null){
         console.log("data there")
@@ -57,5 +38,5 @@ app.get("/photo",async (req,res)=>{
 
 })
 
-app.listen(3002)
+app.listen(3003)
 
